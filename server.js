@@ -1,18 +1,23 @@
-var express = require('express');
-var port = process.env.PORT || 3000;
-var app = express();
+let io = require('socket.io')(process.env.PORT || 3000);
+let Server = require('./Classes/Server')
 
-app.get('/', function(req, res) {
-  res.send({
-    "Output" : "Hello World!"
-  });
+console.log('Server has started');
+
+if (process.env.PORT == undefined) {
+    console.log('Local Server');
+} else {
+    console.log('Hosted Server');
+}
+
+let server = new Server(process.env.PORT == undefined);
+
+setInterval(() => {
+    server.onUpdate();
+}, 100, 0);
+
+io.on('connection', function(socket) {
+    let connection = server.onConnected(socket);
+    connection.createEvents();
+    connection.socket.emit('register', {'id': connection.player.id});
 });
-
-app.post('/', function(req, res) {
-  res.send({
-    "Output" : "Hello World!"
-  });
-});
-
-app.listen(port);
-module.exports = app;
+module.exports = server;
